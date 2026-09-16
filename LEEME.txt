@@ -1,0 +1,140 @@
+IAAIM - Botón + Música (uso local en tablet, sin internet)
+============================================================
+
+QUÉ ES ESTO
+-----------
+Una página web (no necesita internet ni instalación) con:
+  - El logo y el botón rojo originales de IAAIM.exe.
+  - Una lista de música que se reproduce sola, una canción tras
+    otra, y que al terminar la última vuelve a empezar en bucle.
+  - Al presionar el botón rojo: suena el tono de IAAIM Y se
+    PAUSA la música. La música NO se reanuda sola: alguien
+    tiene que presionar manualmente "Reanudar música".
+
+
+CÓMO INSTALARLO EN LA TABLET (Xiaomi Pad 7)
+--------------------------------------------
+1. Copia la carpeta completa "iaaim-web" (tal cual, sin renombrar
+   los archivos de adentro) a la memoria de la tablet, por ejemplo
+   dentro de Descargas:
+
+       Almacenamiento interno/Download/iaaim-web/
+           index.html
+           LEEME.txt
+           assets/
+               logo.png
+               button.png
+               tono.mp3
+           musicas/
+               playlist.js
+               01 - Bienvenida al Aeropuerto.wav   (ejemplo, reemplazar)
+               02 - Ambiental Sala de Espera.wav   (ejemplo, reemplazar)
+               03 - Jazz Suave Terminal.wav        (ejemplo, reemplazar)
+               04 - Instrumental Vuelos.wav        (ejemplo, reemplazar)
+               05 - Piano Ambiental Embarque.wav   (ejemplo, reemplazar)
+
+2. Abre esa carpeta con el administrador de archivos de la tablet
+   y toca "index.html". Elige abrir con Chrome.
+
+3. (Opcional pero recomendado) En Chrome, toca el menú (⋮) y
+   selecciona "Añadir a pantalla de inicio". Así queda como un
+   ícono para abrirlo directo, a pantalla completa.
+
+4. La primera vez que se abre cada día, alguien debe presionar una
+   vez el botón azul "Reanudar música". Es un límite de seguridad
+   de los navegadores (no dejan reproducir audio solo, sin que una
+   persona toque la pantalla primero). Después de ese primer toque,
+   la música avanza y hace bucle sola sin que nadie la toque de nuevo,
+   incluso si el usuario pausa/reanuda música o presiona el botón rojo.
+
+
+CÓMO AGREGAR LA MÚSICA DEL AEROPUERTO
+--------------------------------------
+Hay dos formas. Usa la que sea más cómoda, incluso puedes cambiar
+de una a otra cuando quieras.
+
+OPCIÓN A - Botón "Seleccionar/Cambiar carpeta de música" (fácil,
+sin editar nada):
+1. Copia los archivos de audio (.mp3, .wav, .m4a, .ogg) dentro de
+   la carpeta "musicas" (los nombres pueden tener espacios y
+   tildes sin problema).
+2. Abre index.html y toca el botón "📁 Seleccionar carpeta de
+   música" (o "Cambiar carpeta" si ya había una lista cargada).
+3. En el explorador que se abre, entra y selecciona la carpeta
+   "musicas" (selecciona la CARPETA, no un archivo suelto).
+4. Listo, la lista se llena sola y queda ordenada según el nombre
+   de los archivos (por eso conviene nombrarlos "01 - ...",
+   "02 - ...", etc. para controlar el orden).
+
+   IMPORTANTE: esta selección NO se guarda sola. Si se cierra
+   Chrome o se recarga la página, hay que volver a tocar el botón
+   y elegir la carpeta "musicas" de nuevo (son 2 toques, rápido).
+   Es una limitación normal de seguridad de los navegadores: no
+   pueden "recordar" una carpeta del dispositivo sin que alguien
+   la elija a mano cada vez.
+
+OPCIÓN B - Lista automática que no hay que volver a tocar
+(playlist.js), ideal si van a dejar la tablet encendida siempre
+sin recargar la página:
+1. Copia los archivos de audio dentro de "musicas".
+2. Abre "musicas/playlist.js" con un editor de texto (Bloc de
+   notas o cualquiera) y escribe el nombre EXACTO de cada archivo
+   (con su extensión), entre comillas, uno por línea. Ejemplo:
+
+       window.PLAYLIST = [
+         "01 - Bienvenida.mp3",
+         "02 - Ambiental.mp3",
+         "03 - Jazz Suave.mp3"
+       ];
+
+   El orden de la lista es el orden en que se reproducen.
+3. Guarda el archivo y abre (o recarga) index.html: la lista
+   aparece sola, sin tocar ningún botón.
+
+Para quitar una canción: bórrala de la carpeta "musicas" y, si
+usas la Opción B, borra también su línea en playlist.js.
+
+NOTA: la carpeta "musicas" ya viene con 5 pistas de ejemplo (de
+prueba, no son música real) para que puedas ver cómo funciona.
+Bórralas y reemplázalas por la música real del aeropuerto cuando
+estén listos.
+
+
+BOTÓN "PROBAR AUDIO DE YOUTUBE" (opcional, necesita internet)
+---------------------------------------------------------------
+Debajo de la lista hay un botón chico "🔗 Probar audio de YouTube
+(requiere internet)". Es algo aparte del reproductor local:
+- Al tocarlo, abre el reproductor oficial de YouTube dentro de la
+  misma página (no descarga ni guarda nada, solo lo muestra).
+- SOLO funciona si la tablet tiene conexión a internet en ese
+  momento. Si no hay señal, no va a cargar.
+- No está conectado al botón rojo ni a la lista de música: es
+  independiente, pensado únicamente para hacer una prueba rápida.
+- Para uso real en el aeropuerto (sin depender de internet), usá
+  siempre la música local de la carpeta "musicas".
+
+
+CÓMO SE USA EN PANTALLA
+-------------------------
+- Botón rojo grande: suena el tono de IAAIM y pausa la música.
+- Botón azul "Reanudar música" / "Pausar música": control manual,
+  es la única forma de volver a poner la música después de que el
+  botón rojo (o alguien) la pausó.
+- Lista de canciones (a la derecha en horizontal, debajo en
+  vertical): toca cualquier canción para saltar directo a ella;
+  la que se está reproduciendo queda resaltada.
+- Botón "Pantalla completa" (arriba a la derecha): oculta la barra
+  del navegador para que se vea como una app. Para salir, se toca
+  de nuevo (o el botón "atrás" del dispositivo / la tecla Esc).
+- La página se acomoda sola en horizontal o vertical, funciona
+  igual en la tablet en cualquiera de las dos orientaciones.
+
+
+NOTAS TÉCNICAS
+---------------
+- No necesita servidor ni internet: todo funciona abriendo el
+  archivo index.html directamente en Chrome.
+- Si mueves la carpeta, muévela COMPLETA (index.html, assets/ y
+  musicas/ deben quedar siempre juntos, en la misma carpeta).
+- Recomendado: en los ajustes de la tablet, desactivar el apagado
+  automático de pantalla mientras esté en uso como kiosco.

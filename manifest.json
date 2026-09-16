@@ -1,0 +1,12 @@
+{
+  "name": "IAAIM",
+  "short_name": "IAAIM",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#eef1f5",
+  "theme_color": "#0f5fa8",
+  "icons": [
+    { "src": "assets/button.png", "sizes": "900x900", "type": "image/png" }
+  ]
+}

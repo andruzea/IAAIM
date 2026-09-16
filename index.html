@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>IAAIM</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a3d73">
+<style>
+  :root {
+    --texto: #f3f7fb;
+    --muted: rgba(243,247,251,0.68);
+    --acento: #6fd7ff;
+    --vidrio-bg: rgba(255,255,255,0.10);
+    --vidrio-borde: rgba(255,255,255,0.22);
+    --vidrio-bg-fuerte: rgba(255,255,255,0.18);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    color: var(--texto);
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: clamp(14px, 2.4vw, 32px);
+    gap: clamp(10px, 1.8vh, 20px);
+    background:
+      radial-gradient(circle at 12% 15%, rgba(111,215,255,0.35) 0%, transparent 42%),
+      radial-gradient(circle at 88% 85%, rgba(20,60,110,0.55) 0%, transparent 55%),
+      linear-gradient(160deg, #04182e 0%, #0a3d73 55%, #1670b8 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  .fondo-decorativo {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .fondo-decorativo::before,
+  .fondo-decorativo::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.55;
+  }
+  .fondo-decorativo::before {
+    width: 46vmax;
+    height: 46vmax;
+    background: #26b6e0;
+    top: -18vmax;
+    right: -14vmax;
+  }
+  .fondo-decorativo::after {
+    width: 50vmax;
+    height: 50vmax;
+    background: #062a52;
+    bottom: -20vmax;
+    left: -16vmax;
+  }
+
+  #btn-pantalla-completa {
+    position: absolute;
+    top: clamp(14px, 2.4vw, 32px);
+    right: clamp(14px, 2.4vw, 32px);
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--vidrio-borde);
+    background: var(--vidrio-bg);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    color: var(--texto);
+    font-size: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    touch-action: manipulation;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #btn-pantalla-completa:active { transform: scale(0.94); }
+
+  main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    gap: clamp(14px, 2.4vw, 32px);
+    min-height: 0;
+    padding-top: clamp(52px, 9vh, 72px);
+  }
+  @media (orientation: portrait) {
+    main { flex-direction: column; }
+  }
+
+  .panel-control {
+    flex: 1 1 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2.2vh, 24px);
+    min-width: 0;
+  }
+
+  .tarjeta-logo {
+    background: rgba(255,255,255,0.94);
+    border-radius: 22px;
+    padding: clamp(14px, 3vw, 22px) clamp(18px, 4vw, 30px);
+    box-shadow: 0 18px 36px -16px rgba(0,0,0,0.55);
+  }
+  .logo {
+    width: min(30vw, 34vh, 190px);
+    max-width: 100%;
+    height: auto;
+    display: block;
+    pointer-events: none;
+  }
+
+  #boton {
+    width: min(36vw, 40vh, 300px);
+    height: min(36vw, 40vh, 300px);
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.06s ease-out, filter 0.06s ease-out;
+    filter: drop-shadow(0 16px 26px rgba(0,0,0,0.45));
+  }
+  #boton img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  #boton:active,
+  #boton.presionado {
+    transform: scale(0.94);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
+  }
+
+  .estado-musica {
+    text-align: center;
+    max-width: 100%;
+  }
+  .estado-musica .pista-actual {
+    font-size: clamp(14px, 1.9vw, 18px);
+    font-weight: 700;
+    color: var(--texto);
+    max-width: 70vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0 auto 4px;
+  }
+  .estado-musica .etiqueta {
+    font-size: clamp(11px, 1.4vw, 13px);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #control-manual {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--vidrio-borde);
+    background: var(--vidrio-bg-fuerte);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    color: var(--texto);
+    font-size: clamp(13px, 1.8vw, 16px);
+    font-weight: 700;
+    padding: clamp(11px, 1.7vh, 16px) clamp(22px, 3.2vw, 34px);
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 0 10px 24px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.06s ease-out, background 0.15s;
+  }
+  #control-manual:active { transform: scale(0.96); }
+  #control-manual.pausado { background: var(--vidrio-bg); }
+  #control-manual .icono { font-size: 1.2em; line-height: 1; }
+
+  .panel-lista {
+    flex: 1 1 60%;
+    background: var(--vidrio-bg);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid var(--vidrio-borde);
+    border-radius: 26px;
+    box-shadow: 0 20px 45px -20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.15);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .panel-lista-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: clamp(14px, 2vh, 20px) clamp(16px, 2.2vw, 22px) 8px;
+    flex: 0 0 auto;
+  }
+  .panel-lista-header h2 {
+    font-size: clamp(12px, 1.6vw, 15px);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+    font-weight: 600;
+    flex: 1 1 auto;
+  }
+  .acciones-lista {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+  }
+  #btn-cambiar-carpeta {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--vidrio-borde);
+    background: var(--vidrio-bg);
+    color: var(--texto);
+    font-size: clamp(11px, 1.4vw, 13px);
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  #btn-cambiar-carpeta:active { transform: scale(0.96); }
+  .btn-carpeta-grande {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--vidrio-borde);
+    background: var(--vidrio-bg-fuerte);
+    color: var(--texto);
+    font-size: clamp(13px, 1.8vw, 16px);
+    font-weight: 700;
+    padding: 14px 26px;
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: manipulation;
+    margin-top: 14px;
+    box-shadow: 0 10px 24px -12px rgba(0,0,0,0.5);
+  }
+  .btn-carpeta-grande:active { transform: scale(0.96); }
+  #lista-musicas {
+    list-style: none;
+    margin: 0;
+    padding: 4px clamp(10px, 1.4vw, 14px) clamp(10px, 1.4vw, 14px);
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  #lista-musicas li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: clamp(11px, 1.7vh, 15px) clamp(12px, 1.6vw, 16px);
+    border-radius: 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    color: var(--texto);
+    font-size: clamp(13px, 1.7vw, 16px);
+    border: 1px solid transparent;
+  }
+  #lista-musicas li + li { margin-top: 4px; }
+  #lista-musicas li:hover { background: rgba(255,255,255,0.08); }
+  #lista-musicas li.actual {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.28);
+    font-weight: 700;
+  }
+  #lista-musicas li .num {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    width: 1.6em;
+    flex: 0 0 auto;
+    text-align: right;
+  }
+  #lista-musicas li .titulo {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #lista-musicas li .icono-estado {
+    flex: 0 0 auto;
+    color: var(--acento);
+    width: 1.4em;
+    text-align: center;
+  }
+  .aviso-vacio {
+    padding: 20px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  #btn-youtube-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: var(--acento);
+    color: #04263f;
+    font-size: clamp(11px, 1.4vw, 13px);
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: manipulation;
+    flex: 0 0 auto;
+    box-shadow: 0 8px 18px -8px rgba(111,215,255,0.7);
+  }
+  #btn-youtube-toggle:active { transform: scale(0.96); }
+
+  #panel-youtube {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 clamp(8px, 1.2vw, 12px) clamp(10px, 1.4vw, 14px);
+  }
+  #panel-youtube[hidden] { display: none; }
+  .panel-youtube-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: clamp(11px, 1.4vw, 13px);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: 0 0 auto;
+  }
+  #btn-youtube-cerrar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--vidrio-borde);
+    background: var(--vidrio-bg);
+    color: var(--texto);
+    font-size: clamp(11px, 1.4vw, 13px);
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  #btn-youtube-cerrar:active { transform: scale(0.96); }
+  .youtube-embed {
+    position: relative;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.3);
+  }
+  .youtube-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="fondo-decorativo" aria-hidden="true"></div>
+
+  <button id="btn-pantalla-completa" type="button" aria-label="Pantalla completa">
+    <span id="icono-pantalla-completa">⛶</span>
+  </button>
+
+  <main>
+    <section class="panel-control">
+      <div class="tarjeta-logo">
+        <img class="logo" src="assets/logo.png" alt="IAAIM - Instituto Autonomo Aeropuerto Internacional de Maiquetia">
+      </div>
+
+      <button id="boton" type="button" aria-label="Reproducir tono y pausar música">
+        <img src="assets/button.png" alt="Botón de tono" draggable="false">
+      </button>
+
+      <div class="estado-musica">
+        <div class="pista-actual" id="texto-pista">—</div>
+        <div class="etiqueta" id="texto-estado">Presiona reanudar para iniciar la música</div>
+      </div>
+
+      <button id="control-manual" type="button">
+        <span class="icono" id="icono-control">▶</span>
+        <span id="texto-control">Reanudar música</span>
+      </button>
+    </section>
+
+    <section class="panel-lista">
+      <div class="panel-lista-header">
+        <h2>Música del aeropuerto</h2>
+        <div class="acciones-lista">
+          <button id="btn-cambiar-carpeta" type="button" title="Elegir carpeta de música">
+            <span>📁</span><span>Cambiar carpeta</span>
+          </button>
+          <button id="btn-youtube-toggle" type="button" title="Probar audio de YouTube (requiere internet)">
+            <span>🔗</span><span>YouTube</span>
+          </button>
+        </div>
+      </div>
+      <ul id="lista-musicas"></ul>
+
+      <div id="panel-youtube" hidden>
+        <div class="panel-youtube-header">
+          <span>YouTube — necesita internet</span>
+          <button id="btn-youtube-cerrar" type="button">
+            <span>✕</span><span>Volver a la lista</span>
+          </button>
+        </div>
+        <div class="youtube-embed">
+          <iframe id="iframe-youtube" src="" title="Prueba de YouTube" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <input type="file" id="selector-carpeta" webkitdirectory multiple accept="audio/*" style="display:none">
+
+  <audio id="tono" src="assets/tono.mp3" preload="auto"></audio>
+  <audio id="musica" preload="auto"></audio>
+
+  <script src="musicas/playlist.js"></script>
+  <script>
+    const botonTono = document.getElementById('boton');
+    const tono = document.getElementById('tono');
+    const musica = document.getElementById('musica');
+    const listaEl = document.getElementById('lista-musicas');
+    const controlEl = document.getElementById('control-manual');
+    const iconoControlEl = document.getElementById('icono-control');
+    const textoControlEl = document.getElementById('texto-control');
+    const textoPistaEl = document.getElementById('texto-pista');
+    const textoEstadoEl = document.getElementById('texto-estado');
+
+    const inputCarpeta = document.getElementById('selector-carpeta');
+    const btnCambiarCarpeta = document.getElementById('btn-cambiar-carpeta');
+
+    const nombresArchivos = Array.isArray(window.PLAYLIST) ? window.PLAYLIST : [];
+    const pistas = nombresArchivos.map((archivo) => ({
+      titulo: nombreLegible(archivo),
+      srcUrl: 'musicas/' + encodeURIComponent(archivo),
+    }));
+
+    let indiceActual = 0;
+    let bloqueada = true; // true = pausada y no avanza sola hasta reanudacion manual
+    let urlsDeObjeto = [];
+
+    function nombreLegible(archivo) {
+      return archivo
+        .replace(/\.[^/.]+$/, '')
+        .replace(/^[0-9]+[\s\-_.]*/, '')
+        .replace(/[_-]+/g, ' ')
+        .trim() || archivo;
+    }
+
+    function esArchivoDeAudio(nombre) {
+      return /\.(mp3|wav|ogg|oga|m4a|aac|flac)$/i.test(nombre);
+    }
+
+    function limpiarUrlsDeObjeto() {
+      urlsDeObjeto.forEach((u) => URL.revokeObjectURL(u));
+      urlsDeObjeto = [];
+    }
+
+    function abrirSelectorCarpeta() {
+      inputCarpeta.value = '';
+      inputCarpeta.click();
+    }
+
+    function cargarDesdeCarpeta(fileList) {
+      const archivos = Array.from(fileList)
+        .filter((f) => esArchivoDeAudio(f.name))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+      if (archivos.length === 0) {
+        alert('Esa carpeta no tiene archivos de audio (.mp3, .wav, .ogg, .m4a).');
+        return;
+      }
+
+      musica.pause();
+      limpiarUrlsDeObjeto();
+      pistas.length = 0;
+      archivos.forEach((file) => {
+        const url = URL.createObjectURL(file);
+        urlsDeObjeto.push(url);
+        pistas.push({ titulo: nombreLegible(file.name), srcUrl: url });
+      });
+
+      indiceActual = 0;
+      bloqueada = true;
+      construirLista();
+      cargarPista(0);
+      actualizarEstadoUI();
+    }
+
+    inputCarpeta.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        cargarDesdeCarpeta(e.target.files);
+      }
+    });
+    btnCambiarCarpeta.addEventListener('click', abrirSelectorCarpeta);
+
+    function construirLista() {
+      listaEl.innerHTML = '';
+      if (pistas.length === 0) {
+        const aviso = document.createElement('div');
+        aviso.className = 'aviso-vacio';
+        aviso.innerHTML =
+          '<p>No hay música cargada todavía.</p>' +
+          '<button type="button" class="btn-carpeta-grande" id="btn-seleccionar-carpeta-vacio">📁 Seleccionar carpeta de música</button>';
+        listaEl.appendChild(aviso);
+        aviso.querySelector('#btn-seleccionar-carpeta-vacio').addEventListener('click', abrirSelectorCarpeta);
+        return;
+      }
+      pistas.forEach((pista, i) => {
+        const li = document.createElement('li');
+        li.dataset.indice = String(i);
+        li.innerHTML =
+          '<span class="num">' + (i + 1) + '</span>' +
+          '<span class="icono-estado"></span>' +
+          '<span class="titulo">' + pista.titulo + '</span>';
+        li.addEventListener('click', () => seleccionarPista(i));
+        listaEl.appendChild(li);
+      });
+    }
+
+    function actualizarListaUI() {
+      const items = listaEl.querySelectorAll('li[data-indice]');
+      items.forEach((li) => {
+        const i = Number(li.dataset.indice);
+        const esActual = i === indiceActual;
+        li.classList.toggle('actual', esActual);
+        const iconoEl = li.querySelector('.icono-estado');
+        if (iconoEl) {
+          iconoEl.textContent = esActual ? (bloqueada ? '⏸' : '♪') : '';
+        }
+      });
+    }
+
+    function actualizarEstadoUI() {
+      if (pistas.length === 0) {
+        textoPistaEl.textContent = '—';
+        textoEstadoEl.textContent = 'Sin música configurada';
+      } else {
+        textoPistaEl.textContent = pistas[indiceActual].titulo;
+        textoEstadoEl.textContent = bloqueada ? 'En pausa' : 'Reproduciendo';
+      }
+      controlEl.classList.toggle('pausado', !bloqueada);
+      iconoControlEl.textContent = bloqueada ? '▶' : '⏸';
+      textoControlEl.textContent = bloqueada ? 'Reanudar música' : 'Pausar música';
+      actualizarListaUI();
+    }
+
+    function cargarPista(indice) {
+      if (pistas.length === 0) return;
+      indiceActual = ((indice % pistas.length) + pistas.length) % pistas.length;
+      musica.src = pistas[indiceActual].srcUrl;
+    }
+
+    function reproducirMusica() {
+      if (pistas.length === 0) return;
+      bloqueada = false;
+      musica.play().catch(() => {});
+      actualizarEstadoUI();
+    }
+
+    function pausarMusica() {
+      bloqueada = true;
+      musica.pause();
+      actualizarEstadoUI();
+    }
+
+    function seleccionarPista(indice) {
+      cargarPista(indice);
+      reproducirMusica();
+    }
+
+    function alternarControlManual() {
+      if (pistas.length === 0) return;
+      if (!musica.src) cargarPista(indiceActual);
+      if (bloqueada) reproducirMusica();
+      else pausarMusica();
+    }
+
+    musica.addEventListener('ended', () => {
+      if (!bloqueada) {
+        cargarPista(indiceActual + 1);
+        musica.play().catch(() => {});
+        actualizarEstadoUI();
+      }
+    });
+
+    function reproducirTono() {
+      tono.currentTime = 0;
+      tono.play().catch(() => {});
+      botonTono.classList.add('presionado');
+      setTimeout(() => botonTono.classList.remove('presionado'), 120);
+    }
+
+    function alPresionarTono() {
+      reproducirTono();
+      pausarMusica();
+    }
+
+    botonTono.addEventListener('click', alPresionarTono);
+    botonTono.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        alPresionarTono();
+      }
+    });
+
+    controlEl.addEventListener('click', alternarControlManual);
+    controlEl.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        alternarControlManual();
+      }
+    });
+
+    construirLista();
+    if (pistas.length > 0) cargarPista(0);
+    actualizarEstadoUI();
+
+    const YOUTUBE_ID_PRUEBA = '5vxhWe89dco';
+    const btnYoutubeToggle = document.getElementById('btn-youtube-toggle');
+    const btnYoutubeCerrar = document.getElementById('btn-youtube-cerrar');
+    const panelYoutube = document.getElementById('panel-youtube');
+    const iframeYoutube = document.getElementById('iframe-youtube');
+
+    function abrirPanelYoutube() {
+      iframeYoutube.src = 'https://www.youtube.com/embed/' + YOUTUBE_ID_PRUEBA + '?autoplay=1';
+      panelYoutube.hidden = false;
+      listaEl.hidden = true;
+    }
+
+    function cerrarPanelYoutube() {
+      iframeYoutube.src = '';
+      panelYoutube.hidden = true;
+      listaEl.hidden = false;
+    }
+
+    btnYoutubeToggle.addEventListener('click', abrirPanelYoutube);
+    btnYoutubeCerrar.addEventListener('click', cerrarPanelYoutube);
+
+    const btnPantallaCompleta = document.getElementById('btn-pantalla-completa');
+    const iconoPantallaCompletaEl = document.getElementById('icono-pantalla-completa');
+
+    function elementoFullscreen() {
+      return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+    }
+
+    function alternarPantallaCompleta() {
+      if (!elementoFullscreen()) {
+        const el = document.documentElement;
+        const pedir = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+        if (pedir) pedir.call(el).catch(() => {});
+      } else {
+        const salir = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+        if (salir) salir.call(document);
+      }
+    }
+
+    function actualizarBotonPantallaCompleta() {
+      const activo = !!elementoFullscreen();
+      iconoPantallaCompletaEl.textContent = activo ? '⤢' : '⛶';
+      btnPantallaCompleta.setAttribute('aria-label', activo ? 'Salir de pantalla completa' : 'Pantalla completa');
+    }
+
+    const soportaFullscreen = !!(
+      document.documentElement.requestFullscreen ||
+      document.documentElement.webkitRequestFullscreen ||
+      document.documentElement.msRequestFullscreen
+    );
+
+    if (soportaFullscreen) {
+      btnPantallaCompleta.addEventListener('click', alternarPantallaCompleta);
+      document.addEventListener('fullscreenchange', actualizarBotonPantallaCompleta);
+      document.addEventListener('webkitfullscreenchange', actualizarBotonPantallaCompleta);
+      document.addEventListener('msfullscreenchange', actualizarBotonPantallaCompleta);
+    } else {
+      btnPantallaCompleta.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
